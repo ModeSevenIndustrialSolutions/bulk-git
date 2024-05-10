@@ -149,6 +149,7 @@ refresh_repos_serial() {
 }
 
 refresh_repos_parallel() {
+    "$PARALLEL_CMD" --record-env
     "$PARALLEL_CMD" -j "$PARALLEL_THREADS" --env _ process_directory ::: "${REPO_ARRAY[@]}"
 }
 
