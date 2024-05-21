@@ -11,7 +11,7 @@ set -o pipefail
 
 ### Variables ###
 
-PARALLEL_THREADS="1"
+PARALLEL_THREADS="6"
 # Declare a bunch of arrays
 declare -a SRC_ORG_REPO_ARRAY DST_ORG_REPO_ARRAY REPOS_FETCH_ARRAY REPOS_REMOVE_ARRAY
 DATE=$(date '+%Y-%m-%d')

@@ -10,7 +10,7 @@ set -o pipefail
 ### Variables ###
 
 CONDITIONAL="yes"
-PARALLEL_THREADS="8"
+PARALLEL_THREADS="6"
 
 ### Checks ###
 

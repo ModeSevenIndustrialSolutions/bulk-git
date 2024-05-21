@@ -9,7 +9,7 @@ set -o pipefail
 
 ### Variables ###
 
-PARALLEL_THREADS="8"
+PARALLEL_THREADS="6"
 # Declare an array to store enumerated repo names
 declare -a REPO_ARRAY
 
