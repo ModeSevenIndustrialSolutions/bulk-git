@@ -7,7 +7,7 @@ set -o pipefail
 
 ### Variables ###
 
-PARALLEL_THREADS="8"
+PARALLEL_THREADS="6"
 ORG_REPO_LIMIT="1000"
 
 ### Checks ###
