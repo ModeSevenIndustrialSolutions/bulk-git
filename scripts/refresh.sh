@@ -91,7 +91,12 @@ check_if_fork() {
 
 checkout_head_branch() {
     CURRENT_BRANCH=$("$GIT_CMD" branch --show-current)
-    HEAD_BRANCH=$("$GIT_CMD" rev-parse --abbrev-ref HEAD)
+    # Check to see if we are in a detached HEAD state
+    if [ -z ${CURRENT_BRANCH+x} ]; then
+        HEAD_BRANCH=$(git branch -l main master --format '%(refname:short)')
+    else
+        HEAD_BRANCH=$("$GIT_CMD" rev-parse --abbrev-ref HEAD)
+    fi
     # Only checkout HEAD if not already on that branch
     if [ "$CURRENT_BRANCH" != "$HEAD_BRANCH" ]; then
         # Need to swap branch in this repository
