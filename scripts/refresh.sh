@@ -10,7 +10,7 @@ set -o pipefail
 ### Variables ###
 
 PARALLEL_THREADS="6"
-# Declare an array to store enumerated repo names
+# Declare an array to store enumerated repo names
 declare -a REPO_ARRAY
 
 ### Checks ###
@@ -26,7 +26,7 @@ if [ ! -x "$PARALLEL_CMD" ]; then
     echo "GNU parallel was not found in your PATH"; exit 1
 fi
 
-# Check arguments to script
+# Check arguments to script
 if [ $# -ne 0 ]; then
     echo "Usage: $0"; exit 1
 fi
@@ -92,7 +92,7 @@ check_if_fork() {
 checkout_head_branch() {
     CURRENT_BRANCH=$("$GIT_CMD" branch --show-current)
     # Check to see if we are in a detached HEAD state
-    if [ -z ${CURRENT_BRANCH+x} ]; then
+    if [ -z "$CURRENT_BRANCH" ]; then
         HEAD_BRANCH=$(git branch -l main master --format '%(refname:short)')
     else
         HEAD_BRANCH=$("$GIT_CMD" rev-parse --abbrev-ref HEAD)
