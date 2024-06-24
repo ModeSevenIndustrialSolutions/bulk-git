@@ -53,10 +53,6 @@ process_directory() {
     TARGET_DIR="$1"
     printf "Processing: %s -> " "$TARGET_DIR"
     cd "$TARGET_DIR" || change_dir_error
-    # Figure out which of the two options is the primary branch name
-    GIT_MAIN=$("$GIT_CMD" branch -l main \
-        master --format '%(refname:short)')
-    export GIT_MAIN
     if (checkout_head_branch); then
         # Update the repository
         update_repo
@@ -95,7 +91,12 @@ check_if_fork() {
 
 checkout_head_branch() {
     CURRENT_BRANCH=$("$GIT_CMD" branch --show-current)
-    HEAD_BRANCH=$("$GIT_CMD" rev-parse --abbrev-ref HEAD)
+    # Check to see if we are in a detached HEAD state
+    if [ -z ${CURRENT_BRANCH+x} ]; then
+        HEAD_BRANCH=$(git branch -l main master --format '%(refname:short)')
+    else
+        HEAD_BRANCH=$("$GIT_CMD" rev-parse --abbrev-ref HEAD)
+    fi
     # Only checkout HEAD if not already on that branch
     if [ "$CURRENT_BRANCH" != "$HEAD_BRANCH" ]; then
         # Need to swap branch in this repository
@@ -114,6 +115,7 @@ checkout_head_branch() {
 }
 
 update_repo() {
+    HEAD_BRANCH=$("$GIT_CMD" rev-parse --abbrev-ref HEAD)
     if ! (check_if_fork); then
         printf "updating clone -> "
         if ("$GIT_CMD" pull > /dev/null 2>&1;); then
@@ -127,8 +129,8 @@ update_repo() {
         # Repository is a fork
         printf "resetting fork -> "
         if ("$GIT_CMD" fetch upstream > /dev/null 2>&1; \
-            "$GIT_CMD" reset --hard upstream/"$GIT_MAIN" > /dev/null 2>&1; \
-            "$GIT_CMD" push origin "$GIT_MAIN" --force > /dev/null 2>&1); then
+            "$GIT_CMD" reset --hard upstream/"$HEAD_BRANCH" > /dev/null 2>&1; \
+            "$GIT_CMD" push origin "$HEAD_BRANCH" --force > /dev/null 2>&1); then
             echo "Done."
             return 0
         else
