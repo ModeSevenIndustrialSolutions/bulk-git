@@ -9,8 +9,8 @@ set -o pipefail
 
 ### Variables ###
 
-PARALLEL_THREADS="6"
-# Declare an array to store enumerated repo names
+PARALLEL_THREADS="8"
+# Declare an array to store enumerated repo names
 declare -a REPO_ARRAY
 
 ### Checks ###
@@ -26,7 +26,7 @@ if [ ! -x "$PARALLEL_CMD" ]; then
     echo "GNU parallel was not found in your PATH"; exit 1
 fi
 
-# Check arguments to script
+# Check arguments to script
 if [ $# -ne 0 ]; then
     echo "Usage: $0"; exit 1
 fi
@@ -51,7 +51,7 @@ check_is_repo() {
 process_directory() {
     ORIGINAL_DIR=$(pwd)
     TARGET_DIR="$1"
-    printf "Processing: %s -> " "$TARGET_DIR"
+    printf "%s  [ " "$TARGET_DIR"
     cd "$TARGET_DIR" || change_dir_error
     if (checkout_head_branch); then
         # Update the repository
@@ -90,22 +90,31 @@ check_if_fork() {
 }
 
 checkout_head_branch() {
-    CURRENT_BRANCH=$("$GIT_CMD" branch --show-current)
-    # Check to see if we are in a detached HEAD state
-    if [ -z ${CURRENT_BRANCH+x} ]; then
-        HEAD_BRANCH=$(git branch -l main master --format '%(refname:short)')
-    else
+    HEAD_BRANCH=$(git branch -l main master --format '%(refname:short)')
+    if [ -z "$HEAD_BRANCH" ]; then
+        # When HEAD branch is neither master nor main
         HEAD_BRANCH=$("$GIT_CMD" rev-parse --abbrev-ref HEAD)
     fi
+
+    CURRENT_BRANCH=$("$GIT_CMD" branch --show-current)
+    if [ -z "$CURRENT_BRANCH" ]; then
+        # Report when in a detached HEAD state
+        CURRENT_BRANCH="[detached]"
+    fi
+
     # Only checkout HEAD if not already on that branch
     if [ "$CURRENT_BRANCH" != "$HEAD_BRANCH" ]; then
-        # Need to swap branch in this repository
+        # Swap to HEAD branch in the repository
         if ("$GIT_CMD" checkout "$HEAD_BRANCH" > /dev/null 2>&1); then
-            printf "switched to %s -> " "$HEAD_BRANCH"
+            printf "%s -> %s -> " "$CURRENT_BRANCH" "$HEAD_BRANCH"
             return 0
         else
-            echo "Error checking out $HEAD_BRANCH"
-            return 1
+            if ("$GIT_CMD" stash > /dev/null 2>&1); then
+                printf "%s -> STASHED -> %s" "$CURRENT_BRANCH" "$HEAD_BRANCH"
+            else
+                echo "ERROR switching to: $HEAD_BRANCH ]"
+                return 1
+            fi
         fi
     else
         # Already on the appropriate branch
@@ -119,10 +128,10 @@ update_repo() {
     if ! (check_if_fork); then
         printf "updating clone -> "
         if ("$GIT_CMD" pull > /dev/null 2>&1;); then
-            echo "Done."
+            echo "success ]"
             return 0
         else
-            echo "Error."
+            echo "ERROR ]"
             return 1
         fi
     else
@@ -131,10 +140,10 @@ update_repo() {
         if ("$GIT_CMD" fetch upstream > /dev/null 2>&1; \
             "$GIT_CMD" reset --hard upstream/"$HEAD_BRANCH" > /dev/null 2>&1; \
             "$GIT_CMD" push origin "$HEAD_BRANCH" --force > /dev/null 2>&1); then
-            echo "Done."
+            echo "success ]"
             return 0
         else
-            echo "Error."
+            echo "ERROR ]"
             return 1
         fi
     fi
@@ -171,4 +180,5 @@ else
     echo "Running operations concurrently; thread count: $PARALLEL_THREADS"
     refresh_repos_parallel
 fi
-echo "Script completed"; exit 0
+
+echo ""; exit 0
