@@ -8,4 +8,4 @@ Scripts for performing bulk GIT/GitHub operations:
 - common.sh - common functions used by all scripts (work in progress)
 - emptyorg.sh - deletes all repositories from a GitHub organisation (use with care!)
 - raisepr.sh - can be used to bulk raise pull requests in GitHub (deprecated)
-- refresh.sh - updates a cloned GitHub ORG, or nukes origin main/master branch in forks and re-syncs upstream
+- refresh.sh - updates cloned/forked repositories; re-syncs main/master branches with upstream
