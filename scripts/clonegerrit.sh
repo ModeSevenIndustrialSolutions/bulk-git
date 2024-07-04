@@ -101,6 +101,7 @@ fetch_parallel() {
     # Set some useful counters
     ERRORS="0"; SUCCESSES="0"
     # Send operations to GNU parallel from array
+    echo "Note: DOES NOT WORK AT THIS TIME, NEEDS ATTENTION"
     "$PARALLEL_CMD" --record-env
     "$PARALLEL_CMD" -j "$PARALLEL_THREADS" --env _ fetch_gerrit_repo ::: "${GERRIT_REPO_ARRAY[@]}"
     report_results
