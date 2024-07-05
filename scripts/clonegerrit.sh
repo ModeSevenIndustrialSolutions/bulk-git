@@ -72,7 +72,7 @@ fetch_gerrit_repo() {
         else
             echo "Fetching: $REPO_NAME"
         fi
-        if ($GIT_CMD clone --bare "ssh://$GERRIT_SVR:29418/$REPO_NAME.git" "$REPO_NAME" > /dev/null 2>&1); then
+        if ($GIT_CMD clone "ssh://$GERRIT_SVR:29418/$REPO_NAME.git" "$REPO_NAME" > /dev/null 2>&1); then
             SUCCESSES=$((SUCCESSES+1))
         else
             echo "Error: received return code $?"
