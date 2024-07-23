@@ -6,15 +6,16 @@ set -o pipefail
 
 ### Debugging ###
 
-# set -xv
-# DEBUG="true"
+DEBUG="false"
+if [ "$DEBUG" = "true" ]; then
+    set -xv
+fi
 
 ### Variables ###
 
 PARALLEL_THREADS="6"
 # Declare a bunch of arrays
 declare -a SRC_ORG_REPO_ARRAY DST_ORG_REPO_ARRAY REPOS_FETCH_ARRAY REPOS_REMOVE_ARRAY
-DATE=$(date '+%Y-%m-%d')
 
 ### Checks ###
 
@@ -123,6 +124,7 @@ check_repo_present() {
 }
 
 remove_repo() {
+    DATE=$(date '+%Y-%m-%d')
     if [ $# -ne 1 ]; then
         echo "Error: Invalid arguments to remove_repo() function"
         exit 1
@@ -131,8 +133,13 @@ remove_repo() {
     REPO_NAME=$(basename "$ORG_REPO")
     if [ -d "$REPO_NAME" ]; then
         echo "Archiving repository: $REPO_NAME"
-        "$ZIP_CMD" -rq "$REPO-$DATE.zip" "$REPO_NAME"
-        rm -Rf "$REPO_NAME"
+        if ("$ZIP_CMD" -rq "$REPO_NAME-$DATE.zip" "$REPO_NAME"); then
+            echo "Deleting: $REPO_NAME"
+            rm -Rf "$REPO_NAME"
+        else
+            echo "Zip/archive failed; have NOT removed: $REPO_NAME"
+            echo "ZIP parameters: $ZIP_CMD -rq $REPO_NAME-$DATE.zip $REPO_NAME"
+        fi
     fi
     if [ "$DEBUG" = "true" ]; then
         echo "Running: $GITHUB_CLI repo delete $ORG_REPO --yes"
@@ -211,7 +218,7 @@ fetch_parallel() {
     report_results
 }
 
-export -f fetch_repo delete_parallel report_results
+export -f fetch_repo delete_parallel report_results remove_repo
 
 ### Operations m###
 
@@ -237,6 +244,7 @@ for ORG_REPO in "${SRC_ORG_REPO_ARRAY[@]}"; do
     # Extract target folder/repository from composite that includes ORG
     REPO_NAME=$(basename "$ORG_REPO")
     if [ -d "$REPO_NAME" ] && ! check_arg_in_array "$DST_GITHUB_ORG/$REPO_NAME" "${DST_ORG_REPO_ARRAY[@]}"; then
+        DATE=$(date '+%Y-%m-%d')
         echo "Archiving existing folder for unforked repository: $REPO_NAME"
         echo "$ZIP_CMD -rq $REPO_NAME-$DATE.zip $REPO_NAME"
         "$ZIP_CMD" -rq "$REPO_NAME-$DATE.zip" "$REPO_NAME"
